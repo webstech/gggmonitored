@@ -1,0 +1,37 @@
+name: Process slash command
+
+on:
+   issue_comment:
+    types: [created]
+
+jobs:
+  dispatchCommand:
+    runs-on: ubuntu-latest
+    env:
+      GIT_BASE: 2dc94da3744bfbbf145eca587a0f5ff480cc5867
+      GIT_REF: 89bece5
+      GITGITGADGET_REPO_OWNER: "webstech"
+      GITGITGADGET_REPO_BASEOWNER: "webstech"
+      GITGITGADGET_REPO_NAME: "gggmonitored"
+      GITGITGADGET_MAILREPO_NAME: "gggmail"
+      GITGITGADGET_MAILREPO_OWNER: "webstech"
+      GITGITGADGET_MAILREPO_HOST: "github.com"
+      GITGITGADGET_MAIL_AUTHOR: "gitter"
+      GITGITGADGET_CONFIG: "../config.json"
+      # GIT_AUTHOR_NAME: ${{ env.GITGITGADGET_MAIL_AUTHOR }}
+      # GIT_AUTHOR_EMAIL: ${{ env.GITGITGADGET_MAIL_AUTHOR }}@fakehost.com
+
+    steps:
+      - name: Slash Command Dispatch
+        uses: peter-evans/slash-command-dispatch@v2.3.0
+        with:
+          token: ${{ secrets.RUNNER_TOKEN }}
+          commands: |
+            submit
+            preview
+            allow
+            disallow
+            cc
+          issue-type: pull-request
+          # dispatch-type: workflow
+          repository: webstech/ggguser

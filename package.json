@@ -1,0 +1,41 @@
+{
+    "name": "gggmonitored",
+    "version": "1.0.0",
+    "description": "Repo to test with ggguser.",
+    "directories": {
+      "mailServer": "mailServer"
+    },
+    "xtype": "module",
+    "scripts": {
+      "delete:remote": "git update-ref -d refs/notes/gitgitgadget && gh repo delete --confirm && git remote remove origin",
+      "create:remote": "git switch main && gh repo create -s=. -d=\"Repo to test with ggguser\" --public && git push -u origin main",
+      "secret": "gh secret set RUNNER_TOKEN -f .secret",
+      "recreate": "npm run delete:remote && npm run create:remote",
+      "init:user": "node ../gitgitgadget/build/script/misc-helper.js -g ../gggmonitored -G ../ggguser --config ../ggguser/monitor.json init-gitgitgadget-options webstech",
+      "init:email": "node ../gitgitgadget/build/script/misc-helper.js -g ../gggmonitored -G ../ggguser --config ../ggguser/monitor.json init-email-commit-tip 80cb5f54834b6034be3b76dd5b66521c5310b8ac",
+      "branch:last": "git switch -C last && git push -u origin last && git switch main",
+      "branch:dev": "git switch -C dev && git push -u origin dev && git switch main",
+      "create:branches": "npm run branch:last && npm run branch:dev",
+      "restart": "npm run recreate && npm run create:branches && npm run init:user && npm run init:email && npm run secret",
+      "push:update": "git switch update-1 && git push --force -u origin update-1",
+      "pr:create": "gh pr create --fill",
+      "pr:submit": "gh pr comment update-1 -b \"/submit\"",
+      "submit": "npm run push:update && npm run pr:create && npm run pr:submit",
+      "build": "tsc",
+      "genconfig": "node build/src/genConfig.js",
+      "lint": "eslint --ignore-path .gitignore -c .eslintrc.js --ext .ts,.js \"{lib,test}/**/*.{ts,tsx,mjs,js}\"",
+      "test": "npm run test:ts && npm run test:js",
+      "test:ts": "node build/test/index.js",
+      "test:js": "node test/jstest.mjs",
+      "test:mail": "node build/mailServer/index.js --mail ../gggmail"
+    },
+    "author": "Chris. Webster <chris@webstech.net> (https://www.webstech.com/)",
+    "license": "MIT",
+    "devDependencies": {
+    },
+    "dependencies": {
+    },
+    "engines": {
+      "node": ">= 16.0.0"
+    }
+  }

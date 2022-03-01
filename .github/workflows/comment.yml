@@ -1,4 +1,24 @@
 name: Process slash command
+# vars to pass
+# needed for /submit if not in config
+#    - GITGITGADGET_MAILREPO_NAME: "gggmail"
+#    - GITGITGADGET_MAILREPO_OWNER: "webstech"
+#    - GITGITGADGET_MAILREPO_HOST: "github.com"
+#    - GITGITGADGET_MAIL_AUTHOR: "gitter"
+# Missing pieces to set general values:
+#    - GITGITGADGET_CONFIG: "../config.json"
+#      needs to support files or reference to a file on github that can be retrieved
+#      workflow/action would need to retreive if it is a url
+#    - GIT_AUTHOR_NAME: ${{ env.{{ secrets.AUTHOR }}
+#      do these really need to be monitored repo specfic?
+#    - GIT_AUTHOR_EMAIL: ${{ env.{{ secrets.EMAIL }}
+# Missing pieces that are mail related and needed for submit but should be private
+#    - could be config: gitgitgadget.smtpUser joe_user@example.com
+#    - could be config: gitgitgadget.smtpHost localhost
+#    - could not be config: gitgitgadget.smtpPass secret
+#    - gitgitgadget.smtpOpts "{port: 1025, secure:true, tls: {rejectUnauthorized: false}}"
+
+# Add flag for config needs to be regenerated (with updates)
 
 on:
    issue_comment:
@@ -8,12 +28,9 @@ jobs:
   dispatchCommand:
     runs-on: ubuntu-latest
     env:
-      GIT_BASE: 2dc94da3744bfbbf145eca587a0f5ff480cc5867
-      GIT_REF: 89bece5
-      GITGITGADGET_REPO_OWNER: "webstech"
-      GITGITGADGET_REPO_BASEOWNER: "webstech"
-      GITGITGADGET_REPO_NAME: "gggmonitored"
+      # These should come from secrets?
       GITGITGADGET_MAILREPO_NAME: "gggmail"
+
       GITGITGADGET_MAILREPO_OWNER: "webstech"
       GITGITGADGET_MAILREPO_HOST: "github.com"
       GITGITGADGET_MAIL_AUTHOR: "gitter"
@@ -22,16 +39,25 @@ jobs:
       # GIT_AUTHOR_EMAIL: ${{ env.GITGITGADGET_MAIL_AUTHOR }}@fakehost.com
 
     steps:
-      - name: Slash Command Dispatch
-        uses: peter-evans/slash-command-dispatch@v2.3.0
-        with:
-          token: ${{ secrets.RUNNER_TOKEN }}
-          commands: |
-            submit
-            preview
-            allow
-            disallow
-            cc
-          issue-type: pull-request
-          # dispatch-type: workflow
-          repository: webstech/ggguser
+    - name: Slash Command Dispatch
+      uses: peter-evans/slash-command-dispatch@v2.3.0
+      with:
+        token: ${{ secrets.RUNNER_TOKEN }}
+        commands: |
+          submit
+          preview
+          allow
+          disallow
+          cc
+        issue-type: pull-request
+        reactions: false
+        # dispatch-type: workflow
+        repository: webstech/ggguser
+        static-args: |
+          mail-name=${{ env.GITGITGADGET_MAILREPO_NAME }}
+          mail-owner=${{ env.GITGITGADGET_MAILREPO_OWNER }}
+          mail-host=${{ env.GITGITGADGET_MAILREPO_HOST }}
+          mail-author=${{ env.GITGITGADGET_MAIL_AUTHOR }}
+          config=${{ env.GITGITGADGET_CONFIG }}
+          regen-config=true
+          exports=${{ toJson(env) }}

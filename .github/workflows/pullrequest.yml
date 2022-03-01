@@ -1,0 +1,88 @@
+name: Process push and pull_request
+# vars to pass
+# needed for /submit if not in config
+#    - GITGITGADGET_MAILREPO_NAME: "gggmail"
+#    - GITGITGADGET_MAILREPO_OWNER: "webstech"
+#    - GITGITGADGET_MAILREPO_HOST: "github.com"
+#    - GITGITGADGET_MAIL_AUTHOR: "gitter"
+# Missing pieces to set general values:
+#    - GITGITGADGET_CONFIG: "../config.json"
+#      needs to support files or reference to a file on github that can be retrieved
+#      workflow/action would need to retreive if it is a url
+#    - GIT_AUTHOR_NAME: ${{ secrets.AUTHOR }}
+#      do these really need to be monitored repo specfic?
+#    - GIT_AUTHOR_EMAIL: ${{ secrets.EMAIL }}
+# Missing pieces that are mail related and needed for submit but should be private
+#    - could be config: gitgitgadget.smtpUser joe_user@example.com
+#    - could be config: gitgitgadget.smtpHost localhost
+#    - could not be config: gitgitgadget.smtpPass secret
+#    - gitgitgadget.smtpOpts "{port: 1025, secure:true, tls: {rejectUnauthorized: false}}"
+
+# Add flag for config needs to be regenerated (with updates)
+
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  dispatchRequest:
+    runs-on: ubuntu-latest
+    env:
+      RUNNER_OWNER: ${{ secrets.RUNNER_OWNER }}
+      RUNNER_REPO: ${{ secrets.RUNNER_REPO }}
+      REGEN_CONFIG: 1
+      USE_CONFIG: "../config.json"
+      UPDATE_CONFIG: 1
+      GITGITGADGET_MAILREPO_NAME: "gggmail"
+      GITGITGADGET_MAILREPO_OWNER: "webstech"
+      GITGITGADGET_MAILREPO_HOST: "github.com"
+
+      # values to update config
+      GITGITGADGET_MAIL_AUTHOR: "gitter"
+      #config location
+      GITGITGADGET_CONFIG: "../config.json"
+      GITGITGADGET_CONFIG_MODEL: "./build/src/model.js"
+
+    steps:
+    - name: Set config vars based on /command
+      #if: ${{ endswith(github.event.action, 'command') }}
+      run: |
+        COMMENT_ID=${{ github.event.client_payload.github.payload.comment.id }}
+        REPO_OWNER=${{ github.event.client_payload.github.payload.repository.owner.login }}
+        REPO_NAME=${{ github.event.client_payload.github.payload.repository.name }}
+        REPO_BASEOWNER=${{ github.event.client_payload.pull_request.base.repo.owner.login }}
+
+        echo "GITGITGADGET_REPO_OWNER=$REPO_OWNER" >> $GITHUB_ENV
+        echo "GITGITGADGET_REPO_BASEOWNER=$REPO_BASEOWNER" >> $GITHUB_ENV
+        echo "GITGITGADGET_REPO_NAME=$REPO_NAME" >> $GITHUB_ENV
+
+    - name: Dump the client payload context
+      env:
+        ENV: ${{ toJson(env) }}
+        EVENT: ${{ toJson(github.event) }}
+        GITHUB: ${{ toJson(github) }}
+        PAYLOAD_CONTEXT: ${{ toJson(github.event.client_payload) }}
+      run: |
+        echo "$EVENT"
+        echo "$GITHUB"
+        echo "$ENV"
+
+    - uses: LouisBrunner/checks-action@v1.1.1
+      id: check_create
+      if: ${{ 1 == 0 }}
+      with:
+        # token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.APP_TOKEN }}
+        name: Pull request check
+        status: queued
+
+    - name: Repository Dispatch
+      uses: peter-evans/repository-dispatch@v1
+      with:
+        token: ${{ secrets.RUNNER_TOKEN }}
+        event-type: pull-event
+        repository: webstech/ggguser
+        client-payload: '{"github": ${{ toJson(github) }}, "check_id": "${{ steps.check_create.outputs.check_id }}"}'
+        # client-payload: '{"owner": "${{ github.repository_owner }}", "pr": "${{ github.event.number }}", "action": "${{ github.event.action  }}" }'
+      # if: ${{ 1 == 0 }}

@@ -25,7 +25,7 @@
       "create:branches": "npm run branch:last && npm run branch:dev && npm run branch:maint && npm run branch:update",
       "create:branch": "git switch -C %npm_config_branch% && git push -u origin %npm_config_branch% && git switch main",
 
-      "create:commit": "git switch %npm_config_branch% && echo hello >>%npm_config_file% && echo %TIME% >>%npm_config_file% && git add %npm_config_file% && git commit -s -m \"Adding a new file\" -m \"%DATE% %TIME%\" -m %npm_config_file% && git switch main",
+      "create:commit": "git switch %npm_config_branch% && type model.txt >>%npm_config_file% && echo %TIME% >>%npm_config_file% && git add %npm_config_file% && git commit -s -m \"Adding a new file\" -m \"%DATE% %TIME%\" -m %npm_config_file% && git switch main",
       "create:commit1": "set && echo git switch %npm_config_branch% && echo git add %npm_config_file% && echo git commit -s -m \"Adding a new file\"  -m %npm_config_file% && git switch main",
 
       "restart": "npm run recreate && npm run create:branches && npm run init:user && npm run init:email && npm run secret",
